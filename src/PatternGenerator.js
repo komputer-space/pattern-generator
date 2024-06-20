@@ -3,8 +3,10 @@ import { GamePadInput } from "./GamePadInput";
 import { SerialInput } from "./SerialInput";
 import { FilterPad } from "./FilterPad";
 import { PaperScope } from "paper";
-import { KdPattern } from "./patterns/kdPattern";
+import { KdPattern } from "./patterns/KdPattern";
 import { ReferenceImage } from "./ReferenceImage";
+import { BoidsPattern } from "./patterns/boids/BoidsPattern";
+import { Rule30Pattern } from "./patterns/rule30/Rule30Pattern";
 
 const PAPER = new PaperScope();
 
@@ -70,24 +72,32 @@ export class PatternGenerator {
         this.pattern.draw(this.points);
         break;
       case 2:
+        this.pattern = new Rule30Pattern(PAPER, this.viewSize, 100);
+        this.pattern.draw(this.points);
         console.log("pattern " + index);
         break;
       case 3:
+        this.pattern = new BoidsPattern(PAPER, this.canvas);
         console.log("pattern " + index);
         break;
       case 4:
+        this.pattern = null;
         console.log("pattern " + index);
         break;
       case 5:
+        this.pattern = null;
         console.log("pattern " + index);
         break;
       case 6:
+        this.pattern = null;
         console.log("pattern " + index);
         break;
       case 7:
+        this.pattern = null;
         console.log("pattern " + index);
         break;
       case 8:
+        this.pattern = null;
         console.log("pattern " + index);
         break;
       default:
