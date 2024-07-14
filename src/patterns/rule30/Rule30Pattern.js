@@ -32,7 +32,7 @@ export class Rule30Pattern {
       this.cells.push(row);
     }
     this.drawPattern();
-    if (this.transparencyMode) this.drawIndeces();
+    this.drawIndeces();
   }
 
   drawCell(pos, size) {

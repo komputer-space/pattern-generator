@@ -102,11 +102,6 @@ export class PatternGenerator {
 
   // --- CUSTOM METHODS
 
-  updateView() {
-    this.updatePattern();
-    this.setTransparencyMode(this.transparencyMode);
-  }
-
   addPoint(point) {
     this.points.push(point);
     this.drawPoint(point);
@@ -126,12 +121,17 @@ export class PatternGenerator {
 
   drawPoint(point) {
     const pointMarker = new PAPER.Shape.Circle(point, 5);
-    pointMarker.strokeColor = "#FF5414";
+    pointMarker.strokeColor = "#00ff9e";
     this.pointMarkers.push(pointMarker);
   }
 
   showPoints(value) {
     this.pointMarkers.forEach((pointMarker) => (pointMarker.visible = value));
+  }
+
+  updateView() {
+    this.updatePattern();
+    this.setTransparencyMode(this.transparencyMode);
   }
 
   updatePattern() {
