@@ -1,5 +1,5 @@
 import "./styles/global.scss";
-import * as debugLayer from "./debugLayer.js";
+import { TransparencyLayer } from "./TransparencyLayer.js";
 import { PatternGenerator } from "./PatternGenerator.js";
 import { SketchManual } from "./SketchManual.js";
 import { CanvasExporter } from "./CanvasExporter.js";
@@ -7,6 +7,8 @@ import { CanvasExporter } from "./CanvasExporter.js";
 
 const app = {
   viewMode: false,
+  inputActive: true,
+  inputTimeout: null,
   transparencyMode: false,
   smallScreen: false,
   touchDevice: false,
@@ -17,24 +19,29 @@ const app = {
 function setup() {
   app.sketchManual = new SketchManual();
   app.canvasExporter = new CanvasExporter(app.canvas);
-  // app.serialInput = new SerialInput(115200);
-  app.patternGenerator = new PatternGenerator(app.canvas);
+  app.tool = new PatternGenerator(app.canvas);
 
-  debugLayer.initDebugLayer();
-  debugLayer.addObject(app);
-  // debugLayer.addObject(app.serialInput);
-
+  setupInputs();
   document.onkeydown = processKeyInput;
+  document.onmousemove = inputTimeout;
 
   window.onresize = resize;
-  resize();
 
+  app.transparencyLayer = new TransparencyLayer();
+  app.transparencyLayer.addObject(app, "Application");
+  app.transparencyLayer.addObject(app.transparencyLayer, "Transparency Layer");
+  app.transparencyLayer.addObject(app.tool, "Tool");
+
+  setTransparencyMode(true);
+
+  resize();
   update();
+  inputTimeout();
 }
 
 function update() {
-  app.patternGenerator.update();
-  debugLayer.updateDebug();
+  app.tool.update();
+  app.transparencyLayer.updateDebug();
   requestAnimationFrame(update);
 }
 
@@ -43,36 +50,72 @@ setup();
 // ---------
 
 function processKeyInput(e) {
-  switch (e.code) {
-    case "Space":
-      toggleViewMode();
-      break;
-    case "KeyD":
-      toggleTransparencyMode();
-      break;
-    case "KeyR":
-      // app.canvasExporter.toggleRecord();
-      break;
-    case "KeyS":
-      if (app.viewMode) app.canvasExporter.saveImage();
-      break;
-    case "KeyO":
-      // app.patternGenerator.exportScene();
-      break;
+  inputTimeout();
+  if (app.inputActive) {
+    document.activeElement.blur();
+    switch (e.code) {
+      case "KeyF":
+        toggleViewMode();
+        break;
+      case "Space":
+        toggleTransparencyMode();
+        break;
+      case "KeyR":
+        app.canvasExporter.toggleRecord();
+        break;
+      case "KeyS":
+        if (app.viewMode) app.canvasExporter.saveImage();
+        break;
+      case "Tab":
+        if (!app.viewMode) app.tool.loadNewExample();
+        break;
+      case "Escape":
+        window.location.replace("https://toolbox.komputer.space");
+        break;
+    }
   }
+}
+
+function inputTimeout() {
+  app.tool.setIdleMode(false);
+  clearTimeout(app.inputTimeout);
+  app.inputTimeout = setTimeout(() => {
+    console.log("input timeout, enter idle");
+    app.tool.setIdleMode(true);
+  }, 5000);
+}
+
+function setupInputs() {
+  // prevent tool inputs while typing into any text input fields
+  const inputs = Array.from(document.querySelectorAll("input[type=text]"));
+  inputs.forEach((input) => {
+    input.onfocus = () => {
+      app.inputActive = false;
+    };
+    input.onblur = () => {
+      app.inputActive = true;
+    };
+  });
 }
 
 function toggleViewMode() {
   console.log("toggle view mode");
   app.viewMode = !app.viewMode;
-  app.patternGenerator.setViewMode(app.viewMode);
+  const viewModeIndicator = document.getElementById("view-mode-indicator");
+  viewModeIndicator.style.display = app.viewMode ? "flex" : "none";
+  app.tool.setViewMode(app.viewMode);
 }
 
 function toggleTransparencyMode() {
-  debugLayer.toggleDebugLayer();
   console.log("toggle transparency layer");
-  app.transparencyMode = !app.transparencyMode;
-  app.patternGenerator.setTransparencyMode(app.transparencyMode);
+  const active = !app.transparencyMode;
+  setTransparencyMode(active);
+}
+
+function setTransparencyMode(val) {
+  app.transparencyMode = val;
+  app.transparencyLayer.setActive(val);
+  app.tool.setTransparencyMode(val);
 }
 
 function resize() {

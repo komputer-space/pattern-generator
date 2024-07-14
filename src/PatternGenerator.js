@@ -1,21 +1,33 @@
+import { PaperScope } from "paper";
+
 import { FileImporter } from "./FileImporter";
-import { GamePadInput } from "./GamePadInput";
 import { SerialInput } from "./SerialInput";
 import { FilterPad } from "./FilterPad";
-import { PaperScope } from "paper";
+import { InfoLayer } from "./InfoLayer";
+
 import { KdPattern } from "./patterns/KdPattern";
 import { ReferenceImage } from "./ReferenceImage";
 import { BoidsPattern } from "./patterns/boids/BoidsPattern";
 import { Rule30Pattern } from "./patterns/rule30/Rule30Pattern";
+import { view } from "paper/dist/paper-core";
 
 const PAPER = new PaperScope();
 
 export class PatternGenerator {
   constructor(canvas) {
-    this.canvas = canvas;
+    this.transparencyMode = false;
+    this.freeze = false;
+    this.idle = false;
+    this.idleInterval;
+
     this.importer = new FileImporter(this);
 
-    this.gamePadInput = new GamePadInput();
+    this.infoLayer = new InfoLayer();
+
+    // -------
+
+    this.canvas = canvas;
+
     this.serialInput = new SerialInput(115200);
     this.filterPad = new FilterPad(this.setPattern.bind(this));
     this.referenceImage = new ReferenceImage();
@@ -23,6 +35,8 @@ export class PatternGenerator {
     PAPER.setup(this.canvas);
     this.pointTool = new PAPER.Tool();
     this.points = [];
+    this.backupPoints = [];
+    this.pointMarkers = [];
     this.pattern;
     this.viewSize = PAPER.view.viewSize;
 
@@ -33,15 +47,42 @@ export class PatternGenerator {
     // initP5(this.canvas);
   }
 
+  // --- CORE METHODS
+
   update() {}
 
+  resize(width, height) {}
+
   setViewMode(value) {
+    this.freeze = value;
     console.log("set view mode");
   }
 
   setTransparencyMode(value) {
     console.log("set transparency mode");
   }
+
+  setIdleMode(value) {
+    if (this.idle != value) {
+      this.idle = value;
+      if (this.idle) {
+        this.backupPoints = this.points;
+        this.points = [];
+        this.idleInterval = setInterval(this.addRandomPoint.bind(this), 1000);
+      } else {
+        clearInterval(this.idleInterval);
+        this.points = this.backupPoints;
+        this.backupPoints = [];
+      }
+      this.updatePattern();
+    }
+  }
+
+  loadNewExample() {
+    console.log("loading next example");
+  }
+
+  // --- INPUTS
 
   processSerialData() {
     if (this.serialInput.connected) {
@@ -51,16 +92,39 @@ export class PatternGenerator {
   }
 
   pointToolMouseDown(e) {
-    this.points.push(e.point);
-    this.drawPoint(e.point);
-    if (this.pattern) this.pattern.draw(this.points);
+    this.addPoint(e.point);
   }
 
   pointToolMouseDrag(e) {}
 
+  // --- CUSTOM METHODS
+
+  addPoint(point) {
+    this.points.push(point);
+    this.drawPoint(point);
+    this.updatePattern();
+  }
+
+  addRandomPoint() {
+    const point = new PAPER.Point(
+      Math.random() * this.viewSize.width,
+      Math.random() * this.viewSize.height
+    );
+    this.addPoint(point);
+    this.updatePattern;
+  }
+
   drawPoint(point) {
-    const pointShape = new PAPER.Shape.Circle(point, 5);
-    pointShape.strokeColor = "#FF5414";
+    const pointMarker = new PAPER.Shape.Circle(point, 5);
+    pointMarker.strokeColor = "#FF5414";
+    this.pointMarkers.push(pointMarker);
+  }
+
+  updatePattern() {
+    if (this.pattern) this.pattern.draw(this.points);
+    this.pointMarkers.forEach((pointMarker) => pointMarker.remove());
+    this.pointMarkers = [];
+    this.points.map((point) => this.drawPoint(point));
   }
 
   setPattern(index) {
