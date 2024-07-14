@@ -82,7 +82,7 @@ function inputTimeout() {
   app.inputTimeout = setTimeout(() => {
     console.log("input timeout, enter idle");
     app.tool.setIdleMode(true);
-  }, 5000);
+  }, 30000);
 }
 
 function setupInputs() {

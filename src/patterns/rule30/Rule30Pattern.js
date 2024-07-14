@@ -7,9 +7,11 @@ export class Rule30Pattern {
     this.gridSize = 20;
     this.size = size;
     this.padding = 0;
+    this.transparencyMode = false;
 
     this.cells = []; // 2D Array with rows of cells
     this.shapes = [];
+    this.indices = [];
   }
 
   draw(points) {
@@ -30,7 +32,7 @@ export class Rule30Pattern {
       this.cells.push(row);
     }
     this.drawPattern();
-    // this.drawIndeces();
+    if (this.transparencyMode) this.drawIndeces();
   }
 
   drawCell(pos, size) {
@@ -111,20 +113,30 @@ export class Rule30Pattern {
       row.forEach((cell, x) => {
         const index = new this.paper.PointText({
           point: cell.pos.add(this.gridSize / 2, this.gridSize / 2),
-          content: y + "/" + x,
-          fillColor: "#ff5414",
-          fontSize: 8,
+          content: y * x,
+          fillColor: "#00ff9e",
+          fontSize: 7,
+          font: "Recursive",
         });
-        this.shapes.push(index);
+        this.indices.push(index);
       });
     });
+  }
+
+  setTransparencyMode(value) {
+    this.transparencyMode = value;
+    this.indices.forEach((index) => (index.visible = value));
   }
 
   reset() {
     this.shapes.forEach((shape) => {
       shape.remove();
     });
+    this.indices.forEach((index) => {
+      index.remove();
+    });
     this.cells = [];
+    this.indices = [];
     this.shapes = [];
   }
 }

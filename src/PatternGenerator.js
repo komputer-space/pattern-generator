@@ -60,6 +60,9 @@ export class PatternGenerator {
 
   setTransparencyMode(value) {
     console.log("set transparency mode");
+    this.transparencyMode = value;
+    this.pattern.setTransparencyMode(value);
+    this.showPoints(value);
   }
 
   setIdleMode(value) {
@@ -92,17 +95,24 @@ export class PatternGenerator {
   }
 
   pointToolMouseDown(e) {
-    this.addPoint(e.point);
+    if (!this.freeze) this.addPoint(e.point);
   }
 
   pointToolMouseDrag(e) {}
 
   // --- CUSTOM METHODS
 
+  updateView() {
+    this.updatePattern();
+    this.setTransparencyMode(this.transparencyMode);
+  }
+
   addPoint(point) {
     this.points.push(point);
     this.drawPoint(point);
     this.updatePattern();
+    this.showPoints(true);
+    if (!this.transparencyMode) setTimeout(() => this.showPoints(false), 1000);
   }
 
   addRandomPoint() {
@@ -118,6 +128,10 @@ export class PatternGenerator {
     const pointMarker = new PAPER.Shape.Circle(point, 5);
     pointMarker.strokeColor = "#FF5414";
     this.pointMarkers.push(pointMarker);
+  }
+
+  showPoints(value) {
+    this.pointMarkers.forEach((pointMarker) => (pointMarker.visible = value));
   }
 
   updatePattern() {
@@ -167,6 +181,7 @@ export class PatternGenerator {
       default:
         break;
     }
+    this.updateView();
   }
 
   // --- FILE IMPORTS

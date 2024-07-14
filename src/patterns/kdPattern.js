@@ -7,6 +7,7 @@ export class KdPattern {
     this.tree = new KdTree(2, maxDepth);
     this.size = size;
     this.padding = 0;
+    this.transparencyMode = false;
 
     this.shapes = [];
   }
@@ -29,6 +30,10 @@ export class KdPattern {
     this.shapes.forEach((shape) => {
       shape.remove();
     });
+  }
+
+  setTransparencyMode(value) {
+    this.transparencyMode = value;
   }
 
   drawNode(node) {
